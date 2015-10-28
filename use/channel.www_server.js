@@ -1,4 +1,5 @@
 var Sealious = require("sealious");
+var rp = require('request-promise');
 var www_server = Sealious.ChipManager.get_chip("channel", "www_server");
 
 url = "/api/v1/users";
@@ -31,24 +32,47 @@ www_server.route({
     }
 });
 
-
 www_server.route({
     method: "POST",
     path: url,
     handler: function(request, reply){
         var context = www_server.get_context(request);
-        Sealious.Dispatcher.users.create_user(context, request.payload.username, request.payload.password)
-        .then(function(response){
-            if(request.payload.redirect_success_url){
-                console.log(request.payload.redirect_success_url);
-                reply(response).redirect(request.payload.redirect_success_url);
-            }else{
-                reply(response);
+        var options = {
+            method: 'POST',
+            uri: 'https://www.google.com/recaptcha/api/siteverify',
+            form: {
+                secret: Sealious.ConfigManager.get_config("google_captcha_secret").google_captcha_secret,
+                response: request.payload["g-recaptcha-response"]
+                //remoteip: context.ip
+            },
+             headers: {
+                'content-type': 'application/json' 
+            }
+        };
+        rp(options)
+        .then(function (parsedBody) {
+            var answer = JSON.parse(parsedBody);
+            if(answer.success==true){
+                Sealious.Dispatcher.users.create_user(context, request.payload.username, request.payload.password)
+                .then(function (response){
+                    if(request.payload.redirect_success_url){
+                        console.log(request.payload.redirect_success_url);
+                        reply(response).redirect(request.payload.redirect_success_url);
+                    }else{
+                        reply(response);
+                    }
+                })
+                .catch(function (error){
+                    reply(error);
+                })   
+            }
+            else {
+                reply("Jestes botem? >:)");
             }
         })
-        .catch(function(error){
+        .catch(function (error) {
             reply(error);
-        })          
+        });       
     }
 });
 
