@@ -42,13 +42,14 @@ www_server.route({
             uri: 'https://www.google.com/recaptcha/api/siteverify',
             form: {
                 secret: Sealious.ConfigManager.get_config("google_captcha_secret").google_captcha_secret,
-                response: request.payload["g-recaptcha-response"]
+                response: request.payload.g_recaptcha
                 //remoteip: context.ip
             },
              headers: {
                 'content-type': 'application/json' 
             }
         };
+        console.log('\n\n\n\n\n\n\n\n\n\n',options);
         rp(options)
         .then(function (parsedBody) {
             var answer = JSON.parse(parsedBody);
