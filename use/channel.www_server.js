@@ -53,6 +53,11 @@ www_server.route({
         rp(options)
         .then(function (parsedBody) {
             var answer = JSON.parse(parsedBody);
+            //var response_captcha = new Sealious.Response({error_code}, (answer.success ? false : true), "response", "register");
+            //console.log('\n\n\n',answer);
+            //console.log('\n\n\n',answer.success);
+            //console.log('\n\n\n',answer["error-codes"][0]);
+
             if(answer.success==true){
                 Sealious.Dispatcher.users.create_user(context, request.payload.username, request.payload.password)
                 .then(function (response){
@@ -68,7 +73,7 @@ www_server.route({
                 })   
             }
             else {
-                reply("Jestes botem? >:)");
+                reply(new Sealious.Errors.ValidationError("You need to do captcha."));//response_captcha);
             }
         })
         .catch(function (error) {
